@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Career Advisor Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        .progress-bar {
+            background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+        }
+        .dark-mode {
+            background-color: #1f2937;
+            color: #f9fafb;
+        }
+        .dark-mode .card {
+            background-color: #374151;
+            color: #f9fafb;
+        }
+        .dark-mode .sidebar {
+            background-color: #111827;
+        }
+        .dark-mode .navbar {
+            background-color: #1f2937;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        const { useState, useEffect } = React;
+
+        // Sidebar Component
+        function Sidebar({ activeTool, setActiveTool, darkMode }) {
+            const tools = [
+                'Skill Profiler',
+                'Career Path Finder',
+                'Skill Gap Analysis',
+                'Recommended Courses',
+                'AI Resume Builder',
+                'Mentor Connect',
+                'Future Jobs & Trends'
+            ];
+
+            return (
+                <div className={`sidebar w-64 h-screen fixed left-0 top-0 p-6 shadow-lg ${darkMode ? 'bg-gray-900' : 'bg-white'}`}>
+                    <h2 className={`text-2xl font-bold mb-8 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Career Tools</h2>
+                    <div className="space-y-2">
+                        {tools.map((tool, index) => (
+                            <button
+                                key={index}
+                                onClick={() => setActiveTool(tool)}
+                                className={`w-full text-left p-3 rounded-lg transition-all duration-300 ${
+                                    activeTool === tool
+                                        ? 'gradient-bg text-white shadow-md'
+                                        : `${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100'}`
+                                }`}
+                            >
+                                {tool}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        // Navbar Component
+        function Navbar({ darkMode, setDarkMode }) {
+            return (
+                <nav className={`navbar fixed top-0 left-64 right-0 h-16 shadow-md z-10 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+                    <div className="flex items-center justify-between px-6 h-full">
+                        <div className="flex space-x-8">
+                            <button className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Dashboard</button>
+                            <button className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>My Career Plan</button>
+                            <button className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Opportunities</button>
+                            <button className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Settings</button>
+                        </div>
+                        <div className="flex items-center space-x-4">
+                            <button
+                                onClick={() => setDarkMode(!darkMode)}
+                                className={`p-2 rounded-full ${darkMode ? 'bg-gray-700 text-yellow-400' : 'bg-gray-200 text-gray-600'}`}
+                            >
+                                <i className={`fas ${darkMode ? 'fa-sun' : 'fa-moon'}`}></i>
+                            </button>
+                        </div>
+                    </div>
+                </nav>
+            );
+        }
+
+        // Progress Bar Component
+        function ProgressBar({ progress }) {
+            return (
+                <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
+                    <div
+                        className="progress-bar h-4 rounded-full transition-all duration-1000"
+                        style={{ width: `${progress}%` }}
+                    ></div>
+                </div>
+            );
+        }
+
+        // Roadmap Component
+        function Roadmap({ darkMode }) {
+            const steps = [
+                { title: 'Self Assessment', description: 'Identify your strengths and interests', completed: true },
+                { title: 'Skill Development', description: 'Learn essential skills for your career', completed: true },
+                { title: 'Career Exploration', description: 'Research different career paths', completed: false },
+                { title: 'Networking', description: 'Build professional connections', completed: false },
+                { title: 'Job Search', description: 'Apply for positions and interview', completed: false }
+            ];
+
+            return (
+                <div className={`card p-6 rounded-xl shadow-md mb-6 ${darkMode ? 'bg-gray-700' : 'bg-white'} card-hover`}>
+                    <h3 className={`text-xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Career Roadmap</h3>
+                    <div className="space-y-4">
+                        {steps.map((step, index) => (
+                            <div key={index} className="flex items-center space-x-4">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                    step.completed ? 'gradient-bg text-white' : 'bg-gray-300 text-gray-600'
+                                }`}>
+                                    {step.completed ? <i className="fas fa-check"></i> : index + 1}
+                                </div>
+                                <div>
+                                    <h4 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>{step.title}</h4>
+                                    <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>{step.description}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        // Skills Chart Component
+        function SkillsChart({ darkMode }) {
+            useEffect(() => {
+                const ctx = document.getElementById('skillsChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['JavaScript', 'Python', 'React', 'Data Analysis', 'Machine Learning', 'Communication'],
+                        datasets: [{
+                            label: 'Your Skills',
+                            data: [85, 70, 90, 65, 55, 80],
+                            backgroundColor: 'rgba(99, 102, 241, 0.6)',
+                            borderColor: 'rgba(99, 102, 241, 1)',
+                            borderWidth: 1
+                        }, {
+                            label: 'Industry Demand',
+                            data: [90, 85, 95, 80, 75, 85],
+                            backgroundColor: 'rgba(244, 114, 182, 0.6)',
+                            borderColor: 'rgba(244, 114, 182, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    color: darkMode ? '#f9fafb' : '#374151'
+                                },
+                                grid: {
+                                    color: darkMode ? '#4b5563' : '#e5e7eb'
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    color: darkMode ? '#f9fafb' : '#374151'
+                                },
+                                grid: {
+                                    color: darkMode ? '#4b5563' : '#e5e7eb'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: darkMode ? '#f9fafb' : '#374151'
+                                }
+                            }
+                        }
+                    }
+                });
+            }, [darkMode]);
+
+            return (
+                <div className={`card p-6 rounded-xl shadow-md mb-6 ${darkMode ? 'bg-gray-700' : 'bg-white'} card-hover`}>
+                    <h3 className={`text-xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Top Skills vs Industry Demand</h3>
+                    <canvas id="skillsChart"></canvas>
+                </div>
+            );
+        }
+
+        // Courses Component
+        function Courses({ darkMode }) {
+            const courses = [
+                { name: 'Advanced React Development', progress: 75, link: '#' },
+                { name: 'Python for Data Science', progress: 60, link: '#' },
+                { name: 'Machine Learning Fundamentals', progress: 40, link: '#' },
+                { name: 'UI/UX Design Principles', progress: 90, link: '#' }
+            ];
+
+            return (
+                <div className={`card p-6 rounded-xl shadow-md mb-6 ${darkMode ? 'bg-gray-700' : 'bg-white'} card-hover`}>
+                    <h3 className={`text-xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Recommended Courses</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {courses.map((course, index) => (
+                            <div key={index} className={`p-4 rounded-lg ${darkMode ? 'bg-gray-600' : 'bg-gray-50'} card-hover`}>
+                                <h4 className={`font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>{course.name}</h4>
+                                <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                                    <div
+                                        className="progress-bar h-2 rounded-full"
+                                        style={{ width: `${course.progress}%` }}
+                                    ></div>
+                                </div>
+                                <p className={`text-sm mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>{course.progress}% Complete</p>
+                                <a href={course.link} className="gradient-bg text-white px-4 py-2 rounded-lg text-sm font-semibold">Continue Learning</a>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        // Daily Challenge Component
+        function DailyChallenge({ darkMode }) {
+            return (
+                <div className={`card p-6 rounded-xl shadow-md ${darkMode ? 'bg-gray-700' : 'bg-white'} card-hover`}>
+                    <h3 className={`text-xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Daily Challenge</h3>
+                    <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-600' : 'bg-gray-50'}`}>
+                        <h4 className={`font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Coding Challenge: Two Sum Problem</h4>
+                        <p className={`text-sm mb-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                            Given an array of integers and a target sum, find two numbers that add up to the target.
+                        </p>
+                        <button className="gradient-bg text-white px-6 py-2 rounded-lg font-semibold">Start Challenge</button>
+                    </div>
+                </div>
+            );
+        }
+
+        // Main App Component
+        function App() {
+            const [activeTool, setActiveTool] = useState('Skill Profiler');
+            const [darkMode, setDarkMode] = useState(false);
+            const [studentName] = useState('John Doe');
+
+            useEffect(() => {
+                document.body.className = darkMode ? 'dark-mode' : '';
+            }, [darkMode]);
+
+            const downloadCareerPlan = () => {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                doc.text('My Career Plan', 20, 20);
+                doc.text(`Student: ${studentName}`, 20, 30);
+                doc.text('Career Goals:', 20, 40);
+                doc.text('1. Complete React certification', 20, 50);
+                doc.text('2. Learn Python for data science', 20, 60);
+                doc.text('3. Build portfolio projects', 20, 70);
+                doc.save('career-plan.pdf');
+            };
+
+            return (
+                <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
+                    <Sidebar activeTool={activeTool} setActiveTool={setActiveTool} darkMode={darkMode} />
+                    <Navbar darkMode={darkMode} setDarkMode={setDarkMode} />
+                    <main className="ml-64 mt-16 p-6">
+                        <div className="max-w-7xl mx-auto">
+                            <div className="flex justify-between items-center mb-8">
+                                <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                                    Welcome {studentName}, here's your career journey 🚀
+                                </h1>
+                                <button
+                                    onClick={downloadCareerPlan}
+                                    className="gradient-bg text-white px-6 py-3 rounded-lg font-semibold shadow-md hover:shadow-lg transition-shadow"
+                                >
+                                    <i className="fas fa-download mr-2"></i>Download Career Plan
+                                </button>
+                            </div>
+
+                            <div className={`card p-6 rounded-xl shadow-md mb-6 ${darkMode ? 'bg-gray-700' : 'bg-white'} card-hover`}>
+                                <h2 className={`text-xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Skill Development Progress</h2>
+                                <ProgressBar progress={68} />
+                                <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>68% Complete - Keep up the great work!</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                                <Roadmap darkMode={darkMode} />
+                                <SkillsChart darkMode={darkMode} />
+                            </div>
+
+                            <Courses darkMode={darkMode} />
+                            <DailyChallenge darkMode={darkMode} />
+                        </div>
+                    </main>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
